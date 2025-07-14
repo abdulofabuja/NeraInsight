@@ -41,7 +41,7 @@
 
   <div class="ref-box text-center">
     <h3>Your Referral Link</h3>
-    <p>Share this link and earn ₦500 + 10% of their first deposit</p>
+    <p>Share this link and earn 10% of their first deposit</p>
     <input type="text" id="referralLink" class="form-control mb-3 text-center" readonly />
     <button class="btn btn-copy" onclick="copyReferral()">Copy Link</button>
     <p id="copyMsg" class="mt-2"></p>
@@ -110,11 +110,11 @@
 
     loadReferralStats();
   </script>
-<script>
-  const token = localStorage.getItem('neraToken');
-  if (!token) {
-    window.location.href = 'login.html';
-  }
-</script>
+  <script>
+    const token = localStorage.getItem('neraToken');
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+  </script>
 </body>
 </html>
