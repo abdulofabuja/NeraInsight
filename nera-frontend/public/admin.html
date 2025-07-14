@@ -62,8 +62,24 @@
       </div>
     </div>
 
+    <!-- 🔔 Top-up Requests -->
+    <h5>Pending Top-up Requests</h5>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Amount</th>
+          <th>Requested At</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="topupTableBody">
+        <tr><td colspan="4" class="text-center">Loading...</td></tr>
+      </tbody>
+    </table>
+
     <!-- 🏧 Withdrawal Requests -->
-    <h5>Withdrawal Requests</h5>
+    <h5 class="mt-5">Withdrawal Requests</h5>
     <table class="table table-bordered">
       <thead>
         <tr>
@@ -90,17 +106,16 @@
   <script>
     const API_BASE = 'https://nerainsight.onrender.com/api';
     const token = localStorage.getItem('neraToken');
+
     const withdrawalTableBody = document.getElementById('withdrawalTableBody');
+    const topupTableBody = document.getElementById('topupTableBody');
 
     async function loadWithdrawals() {
       try {
         const res = await fetch(`${API_BASE}/withdraw/requests`, {
-          headers: {
-            'Authorization': 'Bearer ' + token
-          }
+          headers: { 'Authorization': 'Bearer ' + token }
         });
 
-        if (!res.ok) throw new Error('Failed to fetch requests');
         const data = await res.json();
         withdrawalTableBody.innerHTML = '';
 
@@ -129,7 +144,7 @@
     }
 
     async function approveRequest(id) {
-      if (!confirm('Are you sure you want to approve this withdrawal?')) return;
+      if (!confirm('Approve this withdrawal?')) return;
       try {
         const res = await fetch(`${API_BASE}/withdraw/approve/${id}`, {
           method: 'POST',
@@ -139,12 +154,12 @@
         alert(result.message || 'Approved');
         loadWithdrawals();
       } catch {
-        alert('Error approving request');
+        alert('Error approving withdrawal');
       }
     }
 
     async function declineRequest(id) {
-      if (!confirm('Are you sure you want to decline this withdrawal?')) return;
+      if (!confirm('Decline this withdrawal?')) return;
       try {
         const res = await fetch(`${API_BASE}/withdraw/decline/${id}`, {
           method: 'POST',
@@ -154,7 +169,7 @@
         alert(result.message || 'Declined');
         loadWithdrawals();
       } catch {
-        alert('Error declining request');
+        alert('Error declining withdrawal');
       }
     }
 
@@ -186,12 +201,73 @@
       }
     }
 
-    loadWithdrawals();
-  </script>
+    async function loadTopupRequests() {
+      try {
+        const res = await fetch(`${API_BASE}/topup-request/requests`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
 
-  <script>
+        const data = await res.json();
+        topupTableBody.innerHTML = '';
+
+        if (data.length === 0) {
+          topupTableBody.innerHTML = `<tr><td colspan="4" class="text-center">No requests</td></tr>`;
+          return;
+        }
+
+        data.forEach(req => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${req.userId}</td>
+            <td>₦${req.amount}</td>
+            <td>${new Date(req.requestedAt).toLocaleString()}</td>
+            <td>
+              <button class="btn btn-sm btn-approve me-2" onclick="approveTopup('${req._id}')">Approve</button>
+              <button class="btn btn-sm btn-decline" onclick="declineTopup('${req._id}')">Decline</button>
+            </td>
+          `;
+          topupTableBody.appendChild(row);
+        });
+      } catch (err) {
+        topupTableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error loading top-ups</td></tr>`;
+      }
+    }
+
+    async function approveTopup(id) {
+      if (!confirm('Approve this top-up?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/topup-request/approve/${id}`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const result = await res.json();
+        alert(result.message || 'Top-up approved');
+        loadTopupRequests();
+      } catch {
+        alert('Error approving top-up');
+      }
+    }
+
+    async function declineTopup(id) {
+      if (!confirm('Decline this top-up?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/topup-request/decline/${id}`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const result = await res.json();
+        alert(result.message || 'Top-up declined');
+        loadTopupRequests();
+      } catch {
+        alert('Error declining top-up');
+      }
+    }
+
     if (!token) {
       window.location.href = 'login.html';
+    } else {
+      loadWithdrawals();
+      loadTopupRequests();
     }
   </script>
 </body>

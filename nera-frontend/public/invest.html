@@ -77,6 +77,17 @@
         </div>
       </div>
     </div>
+
+    <!-- WhatsApp Screenshot Instructions -->
+    <div class="text-center my-4">
+      <h5>After Payment</h5>
+      <p>
+        📸 <strong>Send a screenshot and your phone number</strong> to our admin for package approval.
+      </p>
+      <a href="https://wa.me/2348134205800" class="btn btn-success" target="_blank">
+        Send via WhatsApp
+      </a>
+    </div>
   </div>
 
   <!-- Footer -->
@@ -92,7 +103,7 @@
     const token = localStorage.getItem('neraToken');
     const user = JSON.parse(localStorage.getItem('neraUser'));
     const investButtons = document.querySelectorAll('.invest-btn');
-    const API_BASE = 'https://nerainsight.onrender.com/api'; // ✅ Adjust if Termux IP changes
+    const API_BASE = 'https://nerainsight.onrender.com/api';
 
     if (!token || !user) {
       alert('You are not logged in. Redirecting to login...');
@@ -103,7 +114,7 @@
       button.addEventListener('click', () => {
         const amount = parseInt(button.getAttribute('data-amount'));
         const handler = PaystackPop.setup({
-          key: 'pk_live_c5d1acb93adb2112be140b120b26e254c38489cc', // ✅ Replace with your actual PUBLIC key
+          key: 'pk_live_c5d1acb93adb2112be140b120b26e254c38489cc',
           email: user.phone + '@nera.com',
           amount: amount * 100,
           currency: 'NGN',
@@ -139,12 +150,12 @@
       });
     });
   </script>
-<script>
-  const token = localStorage.getItem('neraToken');
-  if (!token) {
-    window.location.href = 'login.html';
-  }
-</script>
+
+  <script>
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+  </script>
 
 </body>
 </html>
