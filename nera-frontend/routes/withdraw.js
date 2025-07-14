@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Withdrawal = require('../models/Withdrawal');
 const User = require('../models/User');
+const Investment = require('../models/Investment'); // ✅ Added this
 const authMiddleware = require('../middleware/auth');
 
 // 🏧 User requests withdrawal
@@ -12,6 +13,12 @@ router.post('/request', authMiddleware, async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // ✅ Check if user has invested before
+    const hasInvestment = await Investment.findOne({ user: userId });
+    if (!hasInvestment) {
+      return res.status(400).json({ message: 'You must invest in a package before requesting withdrawal.' });
+    }
 
     if (user.wallet < amount) {
       return res.status(400).json({ message: 'Insufficient wallet balance' });

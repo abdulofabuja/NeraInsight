@@ -21,14 +21,18 @@ router.post("/invest", authMiddleware, async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Validate package
     if (!packages[amount]) {
       return res.status(400).json({ message: "Invalid package selected" });
     }
 
-    if (user.wallet < amount) {
+    // Prevent using locked bonus
+    const usableBalance = user.bonusUnlocked ? user.wallet : user.wallet - 2000;
+    if (usableBalance < amount) {
       return res.status(400).json({ message: "Insufficient funds" });
     }
 
+    // Check for existing active investment
     const active = await Investment.findOne({
       user: userId,
       expiresAt: { $gt: new Date() },
@@ -37,23 +41,11 @@ router.post("/invest", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "You already have an active investment." });
     }
 
+    // Deduct amount from wallet
     user.wallet -= amount;
 
-    const isFirstInvestment = !(await Investment.findOne({ user: userId }));
-    if (isFirstInvestment && user.referredBy) {
-      const referrer = await User.findOne({ referralCode: user.referredBy });
-
-      if (referrer) {
-        const referralBonus = 500 + 0.1 * amount;
-        referrer.wallet += referralBonus;
-        await referrer.save();
-      }
-
-      if (!user.bonusUnlocked) {
-        user.wallet += 2000;
-        user.bonusUnlocked = true;
-      }
-    }
+    // ❌ No referral bonus logic here anymore
+    // ✅ Bonus unlocking is already handled in topup.js
 
     await user.save();
 

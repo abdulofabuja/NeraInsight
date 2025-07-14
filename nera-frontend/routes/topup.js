@@ -22,23 +22,24 @@ router.post('/', async (req, res) => {
     // Add top-up amount to wallet
     user.wallet += amount;
 
-    // Unlock ₦2000 bonus if first top-up
+    // ✅ Unlock ₦2000 bonus only after first top-up of ₦2000+
     if (!user.bonusUnlocked && amount >= 2000) {
       user.wallet += 2000;
       user.bonusUnlocked = true;
     }
 
-    // Handle referral bonus if first top-up
+    // ✅ Handle referral: give referrer 10% of this first top-up (no ₦500)
     if (isFirstTopup && user.referredBy) {
       const referrer = await User.findOne({ referralCode: user.referredBy });
 
       if (referrer) {
-        const bonus = Math.floor(amount * 0.1); // 10%
+        const bonus = Math.floor(amount * 0.1); // 10% bonus
         referrer.wallet += bonus;
         await referrer.save();
       }
     }
 
+    // Mark first top-up as completed
     user.firstTopupDone = true;
     await user.save();
 
