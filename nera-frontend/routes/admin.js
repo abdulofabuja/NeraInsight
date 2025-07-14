@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const Withdrawal = require('../models/Withdrawal');
 const User = require('../models/User');
-const auth = require('../middleware/auth');
+const auth = require('../middlewares/auth');
 
 // ✅ Approve withdrawal
 router.post('/withdrawals/:id/approve', auth, async (req, res) => {

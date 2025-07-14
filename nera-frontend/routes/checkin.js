@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const authenticateToken = require('../middleware/auth');
+const authenticateToken = require('../middlewares/auth');
 
 // Daily check-in: Give ₦50 if 24hrs passed since last check-in
 router.post('/', authenticateToken, async (req, res) => {

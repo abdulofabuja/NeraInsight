@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Investment = require("../models/Investment");
 const User = require("../models/User");
-const authMiddleware = require("../middleware/auth");
+const authMiddleware = require("../middlewares/auth");
 
 // Fixed investment packages and their daily returns
 const packages = {

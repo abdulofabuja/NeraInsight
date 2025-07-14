@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const TopupRequest = require('../models/TopupRequest'); // ✅ New Model
-const authMiddleware = require('../middleware/auth');
+const authMiddleware = require('../middlewares/auth');
 
 // 🧾 User requests top-up (amount saved for admin to approve)
 router.post('/request', authMiddleware, async (req, res) => {

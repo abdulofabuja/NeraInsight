@@ -5,7 +5,7 @@ const Investment = require('../models/Investment');
 const Withdrawal = require('../models/Withdrawal');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const authenticateToken = require('../middleware/auth');
+const authenticateToken = require('../middlewares/auth');
 
 // Register
 router.post('/register', async (req, res) => {

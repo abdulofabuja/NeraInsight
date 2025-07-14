@@ -3,7 +3,7 @@ const router = express.Router();
 const Withdrawal = require('../models/Withdrawal');
 const User = require('../models/User');
 const Investment = require('../models/Investment'); // ✅ Added this
-const authMiddleware = require('../middleware/auth');
+const authMiddleware = require('../middlewares/auth');
 
 // 🏧 User requests withdrawal
 router.post('/request', authMiddleware, async (req, res) => {
