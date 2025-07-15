@@ -15,10 +15,27 @@
       padding: 20px;
       background: white;
       box-shadow: 0 0 12px rgba(0,0,0,0.08);
+      height: 100%;
     }
     .btn-nera {
       background-color: #2a5298;
       color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .spinner-border {
+      width: 1rem;
+      height: 1rem;
+    }
+    @media (max-width: 768px) {
+      .package-card h5 {
+        font-size: 1.1rem;
+      }
+      .package-card p {
+        font-size: 0.95rem;
+      }
     }
   </style>
 </head>
@@ -37,7 +54,10 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
     <a class="navbar-brand" href="index.html">₦eraInsight</a>
-    <div class="collapse navbar-collapse">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navLinks">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navLinks">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
         <li class="nav-item"><a class="nav-link" href="withdraw.html">Withdraw</a></li>
@@ -50,44 +70,56 @@
   <div class="container my-5">
     <h2 class="text-center mb-4">Investment Packages</h2>
     <div class="row g-4">
-      <!-- Starter -->
-      <div class="col-md-3">
+      <!-- Package Loop -->
+      <div class="col-md-3 col-sm-6 col-12">
         <div class="package-card text-center">
           <h5>Starter Package</h5>
           <p><strong>Deposit:</strong> ₦2,000</p>
           <p><strong>Daily Return:</strong> ₦429</p>
           <p><strong>Withdrawal Amount:</strong> ₦3,000</p>
-          <button class="btn btn-nera w-100 invest-btn" data-amount="2000">Invest ₦2,000</button>
+          <button class="btn btn-nera w-100 invest-btn" data-amount="2000">
+            <span class="text">Invest ₦2,000</span>
+            <span class="spinner d-none"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></span>
+          </button>
         </div>
       </div>
-      <!-- Bronze -->
-      <div class="col-md-3">
+
+      <div class="col-md-3 col-sm-6 col-12">
         <div class="package-card text-center">
           <h5>Bronze Package</h5>
           <p><strong>Deposit:</strong> ₦3,000</p>
           <p><strong>Daily Return:</strong> ₦715</p>
           <p><strong>Withdrawal Amount:</strong> ₦5,500</p>
-          <button class="btn btn-nera w-100 invest-btn" data-amount="3000">Invest ₦3,000</button>
+          <button class="btn btn-nera w-100 invest-btn" data-amount="3000">
+            <span class="text">Invest ₦3,000</span>
+            <span class="spinner d-none"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></span>
+          </button>
         </div>
       </div>
-      <!-- Silver -->
-      <div class="col-md-3">
+
+      <div class="col-md-3 col-sm-6 col-12">
         <div class="package-card text-center">
           <h5>Silver Package</h5>
           <p><strong>Deposit:</strong> ₦5,000</p>
           <p><strong>Daily Return:</strong> ₦1,286</p>
           <p><strong>Withdrawal Amount:</strong> ₦9,000</p>
-          <button class="btn btn-nera w-100 invest-btn" data-amount="5000">Invest ₦5,000</button>
+          <button class="btn btn-nera w-100 invest-btn" data-amount="5000">
+            <span class="text">Invest ₦5,000</span>
+            <span class="spinner d-none"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></span>
+          </button>
         </div>
       </div>
-      <!-- Elite -->
-      <div class="col-md-3">
+
+      <div class="col-md-3 col-sm-6 col-12">
         <div class="package-card text-center">
           <h5>Elite Package</h5>
           <p><strong>Deposit:</strong> ₦7,500</p>
           <p><strong>Daily Return:</strong> ₦1,857</p>
           <p><strong>Withdrawal Amount:</strong> ₦13,000</p>
-          <button class="btn btn-nera w-100 invest-btn" data-amount="7500">Invest ₦7,500</button>
+          <button class="btn btn-nera w-100 invest-btn" data-amount="7500">
+            <span class="text">Invest ₦7,500</span>
+            <span class="spinner d-none"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></span>
+          </button>
         </div>
       </div>
     </div>
@@ -118,6 +150,13 @@
         const returns = returnMap[amount];
         const refId = 'NERA_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
 
+        const btnText = button.querySelector('.text');
+        const btnSpinner = button.querySelector('.spinner');
+
+        btnText.textContent = 'Processing...';
+        btnSpinner.classList.remove('d-none');
+        button.disabled = true;
+
         const handler = PaystackPop.setup({
           key: 'pk_live_c5d1acb93adb2112be140b120b26e254c38489cc',
           email: user?.phone + '@nera.com',
@@ -145,10 +184,17 @@
               }
             } catch (err) {
               alert('⚠️ Network error. Try again.');
+            } finally {
+              btnText.textContent = `Invest ₦${amount.toLocaleString()}`;
+              btnSpinner.classList.add('d-none');
+              button.disabled = false;
             }
           },
           onClose: function() {
             alert('⛔ Transaction canceled.');
+            btnText.textContent = `Invest ₦${amount.toLocaleString()}`;
+            btnSpinner.classList.add('d-none');
+            button.disabled = false;
           }
         });
 
@@ -156,6 +202,5 @@
       });
     });
   </script>
-
 </body>
 </html>

@@ -12,7 +12,7 @@
     }
     .login-box {
       max-width: 450px;
-      margin: 80px auto;
+      margin: 10vh auto;
       padding: 30px;
       background-color: white;
       border-radius: 12px;
@@ -21,9 +21,23 @@
     .btn-nera {
       background-color: #2a5298;
       color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
     #message {
       margin-top: 15px;
+    }
+    .spinner-border {
+      width: 1rem;
+      height: 1rem;
+    }
+    @media (max-width: 576px) {
+      .login-box {
+        margin: 30px 15px;
+        padding: 20px;
+      }
     }
   </style>
 </head>
@@ -60,7 +74,10 @@
         >
       </div>
 
-      <button type="submit" class="btn btn-nera w-100" id="loginBtn">Login</button>
+      <button type="submit" class="btn btn-nera w-100" id="loginBtn">
+        <span class="default-text">Login</span>
+        <span class="spinner d-none"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></span>
+      </button>
     </form>
 
     <div id="message" class="text-center"></div>
@@ -83,6 +100,8 @@
     const form = document.getElementById('loginForm');
     const messageDiv = document.getElementById('message');
     const loginBtn = document.getElementById('loginBtn');
+    const spinner = loginBtn.querySelector('.spinner');
+    const defaultText = loginBtn.querySelector('.default-text');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -90,7 +109,8 @@
       messageDiv.textContent = '';
       messageDiv.style.color = '';
       loginBtn.disabled = true;
-      loginBtn.textContent = 'Logging in...';
+      spinner.classList.remove('d-none');
+      defaultText.textContent = 'Logging in...';
 
       const phone = document.getElementById('phone').value.trim();
       const password = document.getElementById('password').value;
@@ -123,7 +143,8 @@
         messageDiv.textContent = 'Network error. Please try again later.';
       } finally {
         loginBtn.disabled = false;
-        loginBtn.textContent = 'Login';
+        spinner.classList.add('d-none');
+        defaultText.textContent = 'Login';
       }
     });
   </script>

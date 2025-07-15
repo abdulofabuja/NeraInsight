@@ -16,21 +16,28 @@
       background: white;
       box-shadow: 0 0 12px rgba(0,0,0,0.08);
       text-align: center;
+      height: 100%;
     }
     .insight-title {
-      font-size: 20px;
+      font-size: 18px;
       color: #2a5298;
+      margin-bottom: 8px;
     }
     .insight-value {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: bold;
       color: #111;
+    }
+    @media (max-width: 768px) {
+      .insight-value {
+        font-size: 24px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Check Login -->
+  <!-- Token Check -->
   <script>
     const token = localStorage.getItem('neraToken');
     const user = JSON.parse(localStorage.getItem('neraUser'));
@@ -43,7 +50,10 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
     <a class="navbar-brand" href="index.html">₦eraInsight</a>
-    <div class="collapse navbar-collapse">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
         <li class="nav-item"><a class="nav-link" href="invest.html">Invest</a></li>
@@ -57,19 +67,19 @@
   <div class="container my-5">
     <h2 class="text-center mb-4">📊 Your Investment Insights</h2>
     <div class="row g-4">
-      <div class="col-md-4">
+      <div class="col-md-4 col-sm-6 col-12">
         <div class="insight-card">
           <div class="insight-title">Total Investments</div>
           <div class="insight-value" id="total">0</div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-4 col-sm-6 col-12">
         <div class="insight-card">
           <div class="insight-title">Active Packages</div>
           <div class="insight-value" id="active">0</div>
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-md-4 col-sm-6 col-12">
         <div class="insight-card">
           <div class="insight-title">Total Profit</div>
           <div class="insight-value" id="profit">₦0</div>
