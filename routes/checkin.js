@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
-const CheckIn = require('../models/CheckIn'); // ✅ Correct case
+const CheckIn = require('../models/Checkin'); // ✅ Correct case
 const authenticateToken = require('../middlewares/auth'); // ✅ Correct path
 
 // ✅ Daily Check-In – ₦50 reward
