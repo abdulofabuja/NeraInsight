@@ -51,4 +51,15 @@ router.post('/withdrawals/:id/decline', auth, async (req, res) => {
   }
 });
 
+// ✅ View all users (admin)
+router.get('/users', auth, async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 }); // Exclude password
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ message: 'Server error retrieving users.' });
+  }
+});
+
 module.exports = router;

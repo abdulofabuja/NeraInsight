@@ -25,6 +25,7 @@ app.use('/api/checkin', require('./routes/checkin'));
 app.use('/api/returns', require('./routes/returnUpdater'));
 app.use('/api/update-returns', require('./routes/updateReturns'));
 app.use('/api/payment', require('./routes/payment'));
+app.use('/api/admin', require('./routes/admin'));
 
 // ❤️ Health check routes
 app.get('/api/health', (req, res) => {
