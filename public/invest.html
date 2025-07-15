@@ -91,17 +91,6 @@
         </div>
       </div>
     </div>
-
-    <!-- WhatsApp Screenshot Instructions -->
-    <div class="text-center my-4">
-      <h5>After Payment</h5>
-      <p>
-        📸 <strong>Send a screenshot and your phone number</strong> to our admin for package approval.
-      </p>
-      <a href="https://wa.me/2348134205800" class="btn btn-success" target="_blank">
-        Send via WhatsApp
-      </a>
-    </div>
   </div>
 
   <!-- Footer -->
@@ -115,46 +104,54 @@
 
   <script>
     const investButtons = document.querySelectorAll('.invest-btn');
-    const API_BASE = 'https://nerainsight.onrender.com/api'; // ✅ fixed base
+    const API_BASE = 'https://nerainsight.onrender.com/api';
+    const returnMap = {
+      2000: 3000,
+      3000: 5500,
+      5000: 9000,
+      7500: 13000
+    };
 
     investButtons.forEach(button => {
       button.addEventListener('click', () => {
         const amount = parseInt(button.getAttribute('data-amount'));
+        const returns = returnMap[amount];
         const refId = 'NERA_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
 
         const handler = PaystackPop.setup({
-          key: 'pk_live_c5d1acb93adb2112be140b120b26e254c38489cc', // ✅ LIVE PUBLIC KEY
+          key: 'pk_live_c5d1acb93adb2112be140b120b26e254c38489cc',
           email: user?.phone + '@nera.com',
           amount: amount * 100,
           currency: 'NGN',
           ref: refId,
-          callback: function(response) {
-            fetch(`${API_BASE}/payment/verify`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-              },
-              body: JSON.stringify({
-                reference: response.reference,
-                amount: amount
-              })
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.success) {
-                alert('✅ Payment successful and investment activated!');
+          callback: async function(response) {
+            try {
+              const verifyRes = await fetch(`${API_BASE}/topup/paystack/verify`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: 'Bearer ' + token
+                },
+                body: JSON.stringify({ reference: response.reference, amount, returns })
+              });
+
+              const result = await verifyRes.json();
+
+              if (verifyRes.ok) {
+                alert(result.message || '✅ Investment activated successfully!');
                 window.location.href = 'dashboard.html';
               } else {
-                alert('❌ Payment verification failed: ' + data.message);
+                alert(result.message || '❌ Verification failed.');
               }
-            })
-            .catch(() => alert('⚠️ Network error. Please try again.'));
+            } catch (err) {
+              alert('⚠️ Network error. Try again.');
+            }
           },
           onClose: function() {
             alert('⛔ Transaction canceled.');
           }
         });
+
         handler.openIframe();
       });
     });
