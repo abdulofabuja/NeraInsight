@@ -22,6 +22,7 @@ app.use('/api/topup', require('./routes/topup'));
 app.use('/api/topup-request', require('./routes/topupRequests'));
 app.use('/api/withdraw', require('./routes/withdraw'));
 app.use('/api/checkin', require('./routes/checkin'));
+app.use('/api/insights', require('./routes/insight')); // ✅ NEW: Insight route added here
 app.use('/api/returns', require('./routes/returnUpdater'));
 app.use('/api/update-returns', require('./routes/updateReturns'));
 app.use('/api/payment', require('./routes/payment'));
