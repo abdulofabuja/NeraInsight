@@ -66,6 +66,10 @@
 
     <form id="withdrawForm">
       <div class="mb-3">
+        <label class="form-label">Account Name</label>
+        <input type="text" id="accountName" class="form-control" placeholder="Enter account holder's name" required />
+      </div>
+      <div class="mb-3">
         <label class="form-label">Bank Name</label>
         <input type="text" id="bankName" class="form-control" required />
       </div>
@@ -138,34 +142,30 @@
       e.preventDefault();
       messageDiv.textContent = '';
 
+      const accountName = document.getElementById('accountName').value.trim();
       const bankName = document.getElementById('bankName').value.trim();
       const accountNumber = document.getElementById('accountNumber').value.trim();
       const amount = parseInt(document.getElementById('amount').value);
 
-      if (!bankName || !accountNumber || !amount) {
+      if (!accountName || !bankName || !accountNumber || !amount) {
         messageDiv.style.color = 'red';
         messageDiv.textContent = 'All fields are required.';
         return;
       }
 
-      // 🚫 Minimum withdrawal validation (₦3000)
-      if (amount < 3000) {
-        messageDiv.style.color = 'red';
-        messageDiv.textContent = 'Minimum withdrawal amount is ₦3000.';
-        return;
-      }
-
       try {
+        // Update bank info including accountName
         await fetch(`${API_BASE}/user/update-bank`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
           },
-          body: JSON.stringify({ bankName, accountNumber })
+          body: JSON.stringify({ accountName, bankName, accountNumber })
         });
 
-        const res = await fetch(`${API_BASE}/withdrawal/request`, {
+        // Request withdrawal
+        const res = await fetch(`${API_BASE}/withdraw/request`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -176,10 +176,8 @@
 
         const data = await res.json();
         if (res.ok) {
-          messageDiv.style.color = 'green';
-          messageDiv.textContent = data.message || 'Withdrawal request submitted!';
-          loadWallet();
-          loadWithdrawalHistory();
+          alert('✅ Withdrawal request sent!');
+          window.location.href = 'index.html'; // Redirect to home page
         } else {
           messageDiv.style.color = 'red';
           messageDiv.textContent = data.message || 'Withdrawal failed.';
@@ -195,7 +193,7 @@
       const tbody = document.getElementById('withdrawalHistory');
       tbody.innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
       try {
-        const res = await fetch(`${API_BASE}/withdrawal/history`, {
+        const res = await fetch(`${API_BASE}/withdraw/history`, {
           headers: { 'Authorization': 'Bearer ' + token }
         });
         const data = await res.json();
@@ -204,7 +202,7 @@
             tbody.innerHTML = '<tr><td colspan="3" class="text-center">No withdrawals yet.</td></tr>';
           } else {
             tbody.innerHTML = '';
-            data.withdrawals.reverse().forEach(w => {
+            data.withdrawals.forEach(w => {
               const badge = w.status === 'approved'
                 ? 'approved'
                 : w.status === 'pending'
@@ -227,19 +225,8 @@
       }
     }
 
-    // Optional: Track view
-    async function incrementView() {
-      try {
-        await fetch(`${API_BASE}/user/increment-view`, {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + token }
-        });
-      } catch {}
-    }
-
     loadWallet();
     loadWithdrawalHistory();
-    incrementView();
   </script>
 </body>
 </html>
