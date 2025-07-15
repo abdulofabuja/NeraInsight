@@ -21,6 +21,14 @@ const authenticate = (req, res, next) => {
   });
 };
 
+// Fixed daily return based on amount
+const packages = {
+  2000: 300,
+  3000: 400,
+  5000: 700,
+  7500: 1000,
+};
+
 // POST /api/payment/verify
 router.post('/verify', authenticate, async (req, res) => {
   const { reference, amount } = req.body;
@@ -45,23 +53,27 @@ router.post('/verify', authenticate, async (req, res) => {
       const user = await User.findById(req.user.userId);
       if (!user) return res.status(404).json({ message: 'User not found' });
 
-      // Activate investment
-      const newInvestment = new Investment({
-        userId: user._id,
-        amount,
-        createdAt: new Date(),
-      });
-      await newInvestment.save();
-
       // Unlock ₦2000 bonus if it's the first investment
-      const isFirstInvestment = !(await Investment.findOne({ userId: user._id, _id: { $ne: newInvestment._id } }));
-      if (isFirstInvestment && !user.bonusUnlocked) {
+      const hasInvestedBefore = await Investment.exists({ user: user._id });
+      if (!hasInvestedBefore && !user.bonusUnlocked) {
         user.wallet += 2000;
         user.bonusUnlocked = true;
       }
 
-      // Referral bonus (10%) only if first investment
-      if (isFirstInvestment && user.referredBy) {
+      // Add new investment
+      const newInvestment = new Investment({
+        user: user._id,
+        amount,
+        dailyReturn: packages[amount] || 0,
+        totalReturn: 0,
+        daysElapsed: 0,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+
+      await newInvestment.save();
+
+      // Referral bonus logic (only if first deposit)
+      if (!hasInvestedBefore && user.referredBy) {
         const referrer = await User.findOne({ referralCode: user.referredBy });
         if (referrer) {
           const bonus = Math.floor(amount * 0.1);

@@ -7,7 +7,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middlewares/auth');
 
-// Register
+// 📱 Register User
 router.post('/register', async (req, res) => {
   try {
     const { phone, password, referredBy } = req.body;
@@ -16,16 +16,13 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Phone and password are required' });
     }
 
-    let user = await User.findOne({ phone });
-    if (user) {
+    const existing = await User.findOne({ phone });
+    if (existing) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    user = new User({
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
       phone,
       password: hashedPassword,
       referredBy: referredBy || null,
@@ -33,20 +30,19 @@ router.post('/register', async (req, res) => {
       bonusUnlocked: false,
     });
 
-    await user.save();
+    await newUser.save();
 
-    res.json({ message: 'User registered successfully', userId: user._id });
+    res.json({ message: 'User registered successfully', userId: newUser._id });
   } catch (err) {
     console.error('Register error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// Login
+// 🔐 Login
 router.post('/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
-
     if (!phone || !password) {
       return res.status(400).json({ message: 'Phone and password are required' });
     }
@@ -56,8 +52,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid phone or password' });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
       return res.status(401).json({ message: 'Invalid phone or password' });
     }
 
@@ -84,7 +80,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Get user profile
+// 👤 Get User Profile
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
@@ -95,7 +91,6 @@ router.get('/profile', authenticateToken, async (req, res) => {
       wallet: user.wallet,
       bonusUnlocked: user.bonusUnlocked,
       referralCode: user.referralCode,
-      activeInvestment: user.activeInvestment || null,
     });
   } catch (err) {
     console.error('Profile fetch error:', err);
@@ -103,7 +98,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Save or update bank details
+// 💳 Save or Update Bank Details
 router.post('/bank-details', authenticateToken, async (req, res) => {
   try {
     const { accountName, bankName, accountNumber } = req.body;
@@ -128,7 +123,7 @@ router.post('/bank-details', authenticateToken, async (req, res) => {
   }
 });
 
-// Daily check-in
+// 📅 Daily Check-in
 router.post('/checkin', authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
@@ -144,7 +139,6 @@ router.post('/checkin', authenticateToken, async (req, res) => {
 
     user.wallet += 50;
     user.lastCheckIn = now;
-
     await user.save();
 
     res.json({ message: 'Checked in successfully! You earned ₦50.', wallet: user.wallet });
@@ -154,7 +148,7 @@ router.post('/checkin', authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ INSIGHT Route
+// 📊 Platform Insight
 router.get('/insight', authenticateToken, async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -167,7 +161,7 @@ router.get('/insight', authenticateToken, async (req, res) => {
     res.json({
       totalUsers,
       totalInvested,
-      totalWithdrawn
+      totalWithdrawn,
     });
   } catch (err) {
     console.error('Insight fetch error:', err);

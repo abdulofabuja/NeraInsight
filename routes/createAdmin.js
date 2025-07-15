@@ -1,10 +1,11 @@
 // createAdmin.js
+
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 
-// Load environment variables
+// Load .env config
 dotenv.config();
 
 async function createAdmin() {
@@ -14,14 +15,21 @@ async function createAdmin() {
       useUnifiedTopology: true,
     });
 
-    const phone = '07000000000'; // You can change this
-    const password = 'Admin123'; // Must follow the password rule
+    const phone = '07000000000'; // Change to your preferred admin phone
+    const password = 'Admin123'; // Must follow your password rule
     const isAdmin = true;
+
+    // Validate password format
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/;
+    if (!passwordRegex.test(password)) {
+      console.log('❌ Password must be at least 6 characters, include 1 uppercase letter and a number.');
+      process.exit(1);
+    }
 
     const existingAdmin = await User.findOne({ phone });
     if (existingAdmin) {
       console.log('❌ Admin already exists with this phone');
-      process.exit();
+      process.exit(1);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -35,13 +43,15 @@ async function createAdmin() {
     });
 
     await admin.save();
-    console.log('✅ Admin created successfully!');
-    console.log(`Phone: ${phone}`);
-    console.log(`Password: ${password}`);
+
+    console.log('\x1b[32m%s\x1b[0m', '✅ Admin created successfully!');
+    console.log(`📱 Phone: ${phone}`);
+    console.log(`🔐 Password: ${password}`);
   } catch (err) {
-    console.error('❌ Error creating admin:', err);
+    console.error('❌ Error creating admin:', err.message || err);
   } finally {
-    mongoose.disconnect();
+    await mongoose.disconnect();
+    process.exit(0);
   }
 }
 

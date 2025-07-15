@@ -19,7 +19,8 @@
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 350px;
+      width: 100%;
+      max-width: 350px;
     }
     h2 {
       margin-bottom: 20px;
@@ -33,7 +34,7 @@
     <form id="loginForm">
       <div class="mb-3">
         <label for="phone" class="form-label">Phone Number</label>
-        <input type="text" class="form-control" id="phone" placeholder="e.g. 07000000000" required />
+        <input type="tel" class="form-control" id="phone" placeholder="e.g. 07000000000" required />
       </div>
       <div class="mb-3">
         <label for="password" class="form-label">Password</label>
@@ -45,8 +46,7 @@
   </div>
 
   <script>
-    const API_BASE = 'https://nerainsight.onrender.com/api'; // Update to your backend URL
-
+    const API_BASE = 'https://nerainsight.onrender.com/api';
     const form = document.getElementById('loginForm');
     const errorMsg = document.getElementById('errorMsg');
 
@@ -71,10 +71,9 @@
           return;
         }
 
-        // Save token to localStorage
         localStorage.setItem('neraToken', data.token);
+        localStorage.setItem('neraUser', JSON.stringify(data.user)); // optional
 
-        // Redirect to admin panel page
         window.location.href = 'admin.html';
       } catch (err) {
         errorMsg.textContent = 'Network error, please try again later';

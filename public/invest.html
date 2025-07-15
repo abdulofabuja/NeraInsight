@@ -115,7 +115,7 @@
 
   <script>
     const investButtons = document.querySelectorAll('.invest-btn');
-    const API_BASE = 'https://nerainsight.onrender.com/api';
+    const API_BASE = 'https://nerainsight-1.onrender.com/api'; // ✅ fixed base
 
     investButtons.forEach(button => {
       button.addEventListener('click', () => {
@@ -123,8 +123,8 @@
         const refId = 'NERA_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
 
         const handler = PaystackPop.setup({
-          key: 'pk_live_c5d1acb93adb2112be140b120b26e254c38489cc',
-          email: user.phone + '@nera.com',
+          key: 'pk_live_c5d1acb93adb2112be140b120b26e254c38489cc', // ✅ LIVE PUBLIC KEY
+          email: user?.phone + '@nera.com',
           amount: amount * 100,
           currency: 'NGN',
           ref: refId,
