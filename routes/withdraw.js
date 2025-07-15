@@ -1,101 +1,138 @@
 const express = require('express');
 const router = express.Router();
+const authMiddleware = require('../middlewares/auth');
 const Withdrawal = require('../models/Withdrawal');
 const User = require('../models/User');
-const Investment = require('../models/Investment'); // ✅ Added this
-const authMiddleware = require('../middlewares/auth');
 
-// 🏧 User requests withdrawal
+// 📤 Request withdrawal
 router.post('/request', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
     const { amount } = req.body;
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // ✅ Check if user has invested before
-    const hasInvestment = await Investment.findOne({ user: userId });
-    if (!hasInvestment) {
-      return res.status(400).json({ message: 'You must invest in a package before requesting withdrawal.' });
+    if (!user || !user.hasInvested) {
+      return res.status(403).json({ message: 'You must invest before withdrawing.' });
     }
 
     if (user.wallet < amount) {
-      return res.status(400).json({ message: 'Insufficient wallet balance' });
+      return res.status(400).json({ message: 'Insufficient balance.' });
     }
 
-    const withdrawal = new Withdrawal({
-      user: user._id,
+    const newWithdrawal = new Withdrawal({
+      user: userId,
       amount,
     });
 
-    user.wallet -= amount;
+    await newWithdrawal.save();
 
-    await withdrawal.save();
+    user.wallet -= amount;
     await user.save();
 
-    res.json({ message: 'Withdrawal request submitted', withdrawal });
+    res.json({ message: 'Withdrawal request submitted.' });
   } catch (err) {
     console.error('Withdrawal error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// 🔐 Admin - Get all withdrawal requests
+// 📜 Get all withdrawal requests (admin)
 router.get('/requests', authMiddleware, async (req, res) => {
   try {
-    const withdrawals = await Withdrawal.find().sort({ requestedAt: -1 }).populate('user');
+    const user = await User.findById(req.user.userId);
 
-    const formatted = withdrawals.map(w => ({
-      _id: w._id,
-      amount: w.amount,
-      status: w.status,
-      userPhone: w.user.phone,
-      bankName: w.user.bankName,
-      accountNumber: w.user.accountNumber,
-      requestedAt: w.requestedAt,
+    if (!user || user.phone !== '07070724430') {
+      return res.status(403).json({ message: 'Admin only.' });
+    }
+
+    const requests = await Withdrawal.find().populate('user').sort({ requestedAt: -1 });
+
+    const formatted = requests.map(req => ({
+      _id: req._id,
+      name: req.user.phone,
+      amount: req.amount,
+      status: req.status,
+      requestedAt: req.requestedAt,
+      bankName: req.user.bankName,
+      accountNumber: req.user.accountNumber,
     }));
 
     res.json(formatted);
   } catch (err) {
-    console.error('Fetch error:', err);
+    console.error('Admin get requests error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// 🔐 Admin - Approve withdrawal
-router.post('/approve/:id', authMiddleware, async (req, res) => {
+// ✅ Admin approve withdrawal
+router.put('/approve/:id', authMiddleware, async (req, res) => {
   try {
+    const admin = await User.findById(req.user.userId);
+    if (!admin || admin.phone !== '07070724430') {
+      return res.status(403).json({ message: 'Admin only.' });
+    }
+
     const withdrawal = await Withdrawal.findById(req.params.id);
-    if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
+    if (!withdrawal) {
+      return res.status(404).json({ message: 'Withdrawal not found.' });
+    }
 
     withdrawal.status = 'approved';
     await withdrawal.save();
 
-    res.json({ message: 'Withdrawal approved' });
+    res.json({ message: 'Withdrawal approved.' });
   } catch (err) {
     console.error('Approve error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-// 🔐 Admin - Decline withdrawal and refund user
-router.post('/decline/:id', authMiddleware, async (req, res) => {
+// ❌ Admin decline withdrawal
+router.put('/decline/:id', authMiddleware, async (req, res) => {
   try {
-    const withdrawal = await Withdrawal.findById(req.params.id).populate('user');
-    if (!withdrawal) return res.status(404).json({ message: 'Withdrawal not found' });
+    const admin = await User.findById(req.user.userId);
+    if (!admin || admin.phone !== '07070724430') {
+      return res.status(403).json({ message: 'Admin only.' });
+    }
+
+    const withdrawal = await Withdrawal.findById(req.params.id);
+    if (!withdrawal) {
+      return res.status(404).json({ message: 'Withdrawal not found.' });
+    }
 
     withdrawal.status = 'declined';
     await withdrawal.save();
 
-    // Refund user
-    const user = await User.findById(withdrawal.user._id);
+    // refund back to user
+    const user = await User.findById(withdrawal.user);
     user.wallet += withdrawal.amount;
     await user.save();
 
-    res.json({ message: 'Withdrawal declined and user refunded' });
+    res.json({ message: 'Withdrawal declined & amount refunded.' });
   } catch (err) {
     console.error('Decline error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// 📜 Get withdrawal history for logged-in user
+router.get('/history', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const withdrawals = await Withdrawal.find({ user: userId }).sort({ requestedAt: -1 });
+
+    const formatted = withdrawals.map(w => ({
+      _id: w._id,
+      amount: w.amount,
+      status: w.status,
+      requestedAt: w.requestedAt,
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    console.error('Withdrawal history error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
