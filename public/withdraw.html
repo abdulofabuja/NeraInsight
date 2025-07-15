@@ -75,7 +75,7 @@
       </div>
       <div class="mb-3">
         <label class="form-label">Amount to Withdraw (₦)</label>
-        <input type="number" id="amount" class="form-control" min="100" required />
+        <input type="number" id="amount" class="form-control" min="3000" required />
       </div>
       <button type="submit" class="btn btn-nera w-100">Request Withdrawal</button>
     </form>
@@ -145,6 +145,13 @@
       if (!bankName || !accountNumber || !amount) {
         messageDiv.style.color = 'red';
         messageDiv.textContent = 'All fields are required.';
+        return;
+      }
+
+      // 🚫 Minimum withdrawal validation (₦3000)
+      if (amount < 3000) {
+        messageDiv.style.color = 'red';
+        messageDiv.textContent = 'Minimum withdrawal amount is ₦3000.';
         return;
       }
 

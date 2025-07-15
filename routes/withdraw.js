@@ -13,6 +13,11 @@ router.post('/request', auth, async (req, res) => {
       return res.status(400).json({ message: 'Invalid withdrawal amount.' });
     }
 
+    // 🔒 Enforce ₦3000 minimum withdrawal
+    if (amount < 3000) {
+      return res.status(400).json({ message: 'Minimum withdrawal amount is ₦3000.' });
+    }
+
     const user = await User.findById(req.user.userId);
 
     if (!user) {
