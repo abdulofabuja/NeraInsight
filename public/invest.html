@@ -72,7 +72,6 @@
   <div class="container my-5">
     <h2 class="text-center mb-4">Investment Packages</h2>
     <div class="row g-4">
-      <!-- Package Template -->
       <div class="col-md-3 col-sm-6 col-12">
         <div class="package-card text-center">
           <h5>Starter Package</h5>
@@ -131,9 +130,18 @@
         const returns = returnMap[amount];
         const refId = 'NERA_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
 
-        console.log("Initiating Paystack:", {
-          amount, returns, phone: user.phone, refId
-        });
+        // Safety check
+        if (!user.phone) {
+          alert('⚠️ Phone number not found. Please login again.');
+          localStorage.clear();
+          window.location.href = 'login.html';
+          return;
+        }
+
+        if (!returnMap[amount]) {
+          alert('Invalid investment package.');
+          return;
+        }
 
         button.textContent = 'Opening Paystack…';
         button.disabled = true;
@@ -145,6 +153,7 @@
           currency: 'NGN',
           ref: refId,
           callback: async function(response) {
+            button.textContent = 'Verifying Payment...';
             try {
               const verifyRes = await fetch(`${API_BASE}/topup/paystack/verify`, {
                 method: 'POST',
