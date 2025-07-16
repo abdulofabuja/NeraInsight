@@ -4,152 +4,86 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Invest | NeraInsight</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background: #f5f6f8;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .package-card {
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.07);
-      padding: 20px;
-      height: 100%;
-    }
-    .btn-nera {
-      background-color: #0e4b8b;
-      color: white;
-    }
-    footer {
-      background: #0e4b8b;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      margin-top: 40px;
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body>
 
-<!-- ✅ Token Check -->
-<script>
-  const token = localStorage.getItem('neraToken');
-  const user = JSON.parse(localStorage.getItem('neraUser'));
-
-  if (!token || !user || !user.phone) {
-    alert('❌ You are not logged in. Redirecting to login.');
-    localStorage.clear();
-    window.location.href = 'login.html';
-  }
-</script>
-
-<!-- ✅ Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-  <a class="navbar-brand" href="index.html">₦eraInsight</a>
-  <div class="collapse navbar-collapse">
-    <ul class="navbar-nav ms-auto">
-      <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-      <li class="nav-item"><a class="nav-link" href="withdraw.html">Withdraw</a></li>
-    </ul>
-  </div>
-</nav>
-
-<!-- ✅ Investment Packages -->
 <div class="container my-5">
-  <h2 class="text-center mb-4">Choose a Package</h2>
-  <div class="row g-4">
-    <!-- Package Loop -->
-    <div class="col-md-3 col-sm-6">
-      <div class="package-card text-center">
-        <h5>Starter</h5>
-        <p><strong>Deposit:</strong> ₦2,000</p>
-        <p><strong>Return:</strong> ₦3,000</p>
-        <button class="btn btn-nera w-100 invest-btn" data-amount="2000">Invest ₦2,000</button>
-      </div>
+  <h2 class="text-center mb-4">Choose Your Package</h2>
+  <div class="row text-center">
+    <div class="col-md-3 col-6 mb-3">
+      <button class="btn btn-primary w-100 invest-btn" data-amount="2000">Invest ₦2,000</button>
     </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="package-card text-center">
-        <h5>Bronze</h5>
-        <p><strong>Deposit:</strong> ₦3,000</p>
-        <p><strong>Return:</strong> ₦5,500</p>
-        <button class="btn btn-nera w-100 invest-btn" data-amount="3000">Invest ₦3,000</button>
-      </div>
+    <div class="col-md-3 col-6 mb-3">
+      <button class="btn btn-primary w-100 invest-btn" data-amount="3000">Invest ₦3,000</button>
     </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="package-card text-center">
-        <h5>Silver</h5>
-        <p><strong>Deposit:</strong> ₦5,000</p>
-        <p><strong>Return:</strong> ₦9,000</p>
-        <button class="btn btn-nera w-100 invest-btn" data-amount="5000">Invest ₦5,000</button>
-      </div>
+    <div class="col-md-3 col-6 mb-3">
+      <button class="btn btn-primary w-100 invest-btn" data-amount="5000">Invest ₦5,000</button>
     </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="package-card text-center">
-        <h5>Elite</h5>
-        <p><strong>Deposit:</strong> ₦7,500</p>
-        <p><strong>Return:</strong> ₦13,000</p>
-        <button class="btn btn-nera w-100 invest-btn" data-amount="7500">Invest ₦7,500</button>
-      </div>
+    <div class="col-md-3 col-6 mb-3">
+      <button class="btn btn-primary w-100 invest-btn" data-amount="7500">Invest ₦7,500</button>
     </div>
   </div>
 </div>
 
-<!-- ✅ Footer -->
-<footer>&copy; 2025 NeraInsight. All rights reserved.</footer>
-
-<!-- ✅ Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Paystack script -->
 <script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
-  const API_BASE = 'https://nerainsight.onrender.com/api';
+  const token = localStorage.getItem('neraToken');
+  const user = JSON.parse(localStorage.getItem('neraUser'));
   const returnMap = { 2000: 3000, 3000: 5500, 5000: 9000, 7500: 13000 };
 
-  document.querySelectorAll('.invest-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      const amount = parseInt(button.dataset.amount);
-      const returns = returnMap[amount];
-      const refId = 'NERA_' + Date.now();
+  if (!token || !user || !user.phone) {
+    alert("Login required.");
+    window.location.href = "login.html";
+  }
 
-      button.textContent = 'Opening Paystack...';
+  const buttons = document.querySelectorAll('.invest-btn');
+
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      const amount = parseInt(button.getAttribute('data-amount'));
+      const returns = returnMap[amount];
+      const refId = "NERA_" + Date.now();
+
       button.disabled = true;
+      button.textContent = "Opening Paystack...";
 
       const handler = PaystackPop.setup({
         key: 'pk_live_c5d1acb93adb2112be140b120b26e254c38489cc',
-        email: user.phone + '@nera.com',
+        email: user.phone + "@nera.com",
         amount: amount * 100,
-        currency: 'NGN',
+        currency: "NGN",
         ref: refId,
         callback: async function(response) {
           try {
-            const res = await fetch(`${API_BASE}/topup/paystack/verify`, {
-              method: 'POST',
+            const res = await fetch("https://nerainsight.onrender.com/api/topup/paystack/verify", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
-                Authorization: 'Bearer ' + token
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token
               },
               body: JSON.stringify({ reference: response.reference, amount, returns })
             });
-
             const data = await res.json();
             if (res.ok) {
-              alert(data.message || '✅ Investment successful!');
-              window.location.href = 'dashboard.html';
+              alert(data.message || "✅ Investment started!");
+              window.location.href = "dashboard.html";
             } else {
-              alert(data.message || '❌ Payment verification failed.');
+              alert("❌ Payment verified but something went wrong.");
             }
-          } catch (error) {
-            console.error(error);
-            alert('⚠️ Network error. Try again.');
+          } catch (err) {
+            alert("❌ Network error during verification.");
+            console.error(err);
           } finally {
-            button.textContent = `Invest ₦${amount.toLocaleString()}`;
             button.disabled = false;
+            button.textContent = `Invest ₦${amount}`;
           }
         },
-        onClose: () => {
-          alert('⛔ Transaction canceled.');
-          button.textContent = `Invest ₦${amount.toLocaleString()}`;
+        onClose: function() {
           button.disabled = false;
+          button.textContent = `Invest ₦${amount}`;
+          alert("Transaction cancelled.");
         }
       });
 
@@ -157,6 +91,5 @@
     });
   });
 </script>
-
 </body>
 </html>
