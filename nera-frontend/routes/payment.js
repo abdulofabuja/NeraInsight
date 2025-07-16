@@ -6,7 +6,7 @@ const User = require('../models/User');
 const Investment = require('../models/Investment');
 require('dotenv').config();
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const FLUTTERWAVE_SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY;
 
 // Middleware to protect routes
 const authenticate = (req, res, next) => {
@@ -21,58 +21,60 @@ const authenticate = (req, res, next) => {
   });
 };
 
-// Fixed daily return based on amount
+// Investment packages with daily return
 const packages = {
-  2000: 300,
-  3000: 400,
-  5000: 700,
-  7500: 1000,
+  2000: 429,
+  3000: 715,
+  5000: 1286,
+  7500: 1857,
 };
 
-// POST /api/payment/verify
-router.post('/verify', authenticate, async (req, res) => {
-  const { reference, amount } = req.body;
+// POST /api/payment/flutterwave/verify
+router.post('/flutterwave/verify', authenticate, async (req, res) => {
+  const { transaction_id, amount } = req.body;
 
-  if (!reference || !amount) {
-    return res.status(400).json({ message: 'Missing reference or amount' });
+  if (!transaction_id || !amount) {
+    return res.status(400).json({ message: 'Missing transaction ID or amount' });
   }
 
   try {
-    const paystackRes = await axios.get(
-      `https://api.paystack.co/transaction/verify/${reference}`,
+    // Verify transaction with Flutterwave
+    const flutterRes = await axios.get(
+      `https://api.flutterwave.com/v3/transactions/${transaction_id}/verify`,
       {
         headers: {
-          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-        },
+          Authorization: `Bearer ${FLUTTERWAVE_SECRET_KEY}`
+        }
       }
     );
 
-    const paymentData = paystackRes.data.data;
+    const paymentData = flutterRes.data.data;
 
-    if (paymentData.status === 'success' && paymentData.amount === amount * 100) {
+    if (paymentData.status === 'successful' && paymentData.amount === amount && paymentData.currency === 'NGN') {
       const user = await User.findById(req.user.userId);
       if (!user) return res.status(404).json({ message: 'User not found' });
 
-      // Unlock ₦2000 bonus if it's the first investment
       const hasInvestedBefore = await Investment.exists({ user: user._id });
-      if (!hasInvestedBefore && !user.bonusUnlocked) {
+
+      // Unlock ₦2000 bonus if first topup
+      if (!hasInvestedBefore && !user.bonusUnlocked && amount >= 2000) {
         user.wallet += 2000;
         user.bonusUnlocked = true;
       }
 
-      // Add new investment
+      // Create investment
       const newInvestment = new Investment({
         user: user._id,
         amount,
         dailyReturn: packages[amount] || 0,
         totalReturn: 0,
         daysElapsed: 0,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       });
 
       await newInvestment.save();
 
-      // Referral bonus logic (only if first deposit)
+      // Referral bonus on first topup
       if (!hasInvestedBefore && user.referredBy) {
         const referrer = await User.findOne({ referralCode: user.referredBy });
         if (referrer) {
@@ -86,14 +88,14 @@ router.post('/verify', authenticate, async (req, res) => {
 
       return res.status(200).json({
         success: true,
-        message: '✅ Payment verified and investment activated!',
+        message: '✅ Investment activated after successful Flutterwave payment!'
       });
     } else {
-      return res.status(400).json({ message: '❌ Invalid payment confirmation' });
+      return res.status(400).json({ message: '❌ Payment verification failed' });
     }
   } catch (err) {
-    console.error('Payment verification error:', err.message);
-    return res.status(500).json({ message: 'Server error during payment verification' });
+    console.error('Flutterwave verify error:', err.message);
+    return res.status(500).json({ message: 'Server error during Flutterwave verification' });
   }
 });
 
