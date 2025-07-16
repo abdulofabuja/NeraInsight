@@ -30,7 +30,7 @@
   const user = JSON.parse(localStorage.getItem('neraUser'));
 
   if (!token || !user || !user.phone) {
-    alert('You must login first!');
+    alert('❌ You must login first!');
     localStorage.clear();
     window.location.href = 'login.html';
   }
@@ -44,6 +44,7 @@
   <h3 class="text-center mb-4">Investment Packages</h3>
   <div class="row g-4">
 
+    <!-- Packages -->
     <div class="col-md-3">
       <div class="package-card text-center">
         <h5>Starter</h5>
@@ -100,6 +101,7 @@
       const returns = returnMap[amount];
       const refId = 'NERA_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
 
+      const originalText = button.textContent;
       button.disabled = true;
       button.textContent = 'Opening Paystack…';
 
@@ -121,23 +123,23 @@
             });
             const data = await res.json();
             if (res.ok) {
-              alert(data.message || 'Investment started!');
+              alert(data.message || '✅ Investment started!');
               window.location.href = 'dashboard.html';
             } else {
-              alert(data.message || 'Verification failed.');
+              alert(data.message || '❌ Verification failed.');
             }
           } catch (err) {
             console.error(err);
-            alert('Network error.');
+            alert('⚠️ Network error.');
           } finally {
             button.disabled = false;
-            button.textContent = `Invest ₦${amount}`;
+            button.textContent = originalText;
           }
         },
         onClose: function() {
-          alert('Payment cancelled');
+          alert('⛔ Payment cancelled');
           button.disabled = false;
-          button.textContent = `Invest ₦${amount}`;
+          button.textContent = originalText;
         }
       });
 
