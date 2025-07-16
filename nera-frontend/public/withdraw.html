@@ -12,7 +12,7 @@
     }
     .withdraw-box {
       max-width: 500px;
-      margin: 50px auto;
+      margin: 20px auto;
       background: white;
       padding: 30px;
       border-radius: 12px;
@@ -22,6 +22,27 @@
       background-color: #2a5298;
       color: white;
     }
+    .history-box {
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.05);
+    }
+    .table td, .table th {
+      vertical-align: middle;
+    }
+    .wallet-balance {
+      text-align: center;
+      font-size: 18px;
+      margin-bottom: 15px;
+      color: #2a5298;
+      font-weight: bold;
+    }
+    .badge.approved { background-color: #28a745; }
+    .badge.pending { background-color: #ffc107; color: #000; }
+    .badge.declined { background-color: #dc3545; }
   </style>
 </head>
 <body>
@@ -40,26 +61,48 @@
 
   <!-- Withdraw Form -->
   <div class="withdraw-box">
-    <h4 class="text-center mb-4">Withdraw Funds</h4>
+    <h4 class="text-center mb-3">Withdraw Funds</h4>
+    <div class="wallet-balance" id="walletBalance">Loading wallet balance...</div>
+
     <form id="withdrawForm">
+      <div class="mb-3">
+        <label class="form-label">Account Name</label>
+        <input type="text" id="accountName" class="form-control" placeholder="Enter account holder's name" required />
+      </div>
       <div class="mb-3">
         <label class="form-label">Bank Name</label>
         <input type="text" id="bankName" class="form-control" required />
       </div>
-
       <div class="mb-3">
         <label class="form-label">Account Number</label>
         <input type="text" id="accountNumber" class="form-control" required />
       </div>
-
       <div class="mb-3">
         <label class="form-label">Amount to Withdraw (₦)</label>
-        <input type="number" id="amount" class="form-control" min="100" required />
+        <input type="number" id="amount" class="form-control" min="3000" required />
       </div>
-
       <button type="submit" class="btn btn-nera w-100">Request Withdrawal</button>
     </form>
     <div id="message" class="text-center mt-3"></div>
+  </div>
+
+  <!-- Withdrawal History -->
+  <div class="history-box">
+    <h5 class="text-center mb-3">Withdrawal History</h5>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>Date</th>
+            <th>Amount (₦)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="withdrawalHistory">
+          <tr><td colspan="3" class="text-center">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <footer class="text-center py-4 bg-dark text-white mt-5">
@@ -67,7 +110,6 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
     const API_BASE = 'https://nerainsight.onrender.com/api';
     const token = localStorage.getItem('neraToken');
@@ -78,35 +120,48 @@
       window.location.href = 'login.html';
     }
 
-    const withdrawForm = document.getElementById('withdrawForm');
+    async function loadWallet() {
+      try {
+        const res = await fetch(`${API_BASE}/user/profile`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (res.ok && data.user) {
+          document.getElementById('walletBalance').textContent = `Wallet Balance: ₦${data.user.wallet}`;
+        } else {
+          document.getElementById('walletBalance').textContent = 'Wallet: Unknown';
+        }
+      } catch {
+        document.getElementById('walletBalance').textContent = 'Wallet: (Error)';
+      }
+    }
 
-    withdrawForm.addEventListener('submit', async (e) => {
+    document.getElementById('withdrawForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       messageDiv.textContent = '';
 
+      const accountName = document.getElementById('accountName').value.trim();
       const bankName = document.getElementById('bankName').value.trim();
       const accountNumber = document.getElementById('accountNumber').value.trim();
       const amount = parseInt(document.getElementById('amount').value);
 
-      if (!bankName || !accountNumber || !amount) {
+      if (!accountName || !bankName || !accountNumber || !amount) {
         messageDiv.style.color = 'red';
         messageDiv.textContent = 'All fields are required.';
         return;
       }
 
       try {
-        // Save bank info
         await fetch(`${API_BASE}/user/update-bank`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
           },
-          body: JSON.stringify({ bankName, accountNumber })
+          body: JSON.stringify({ accountName, bankName, accountNumber })
         });
 
-        // Request withdrawal
-        const res = await fetch(`${API_BASE}/withdrawal/request`, {
+        const res = await fetch(`${API_BASE}/withdraw/request`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -117,23 +172,56 @@
 
         const data = await res.json();
         if (res.ok) {
-          messageDiv.style.color = 'green';
-          messageDiv.textContent = data.message || 'Withdrawal request submitted!';
+          alert('✅ Withdrawal request sent!');
+          window.location.href = 'index.html';
         } else {
           messageDiv.style.color = 'red';
-          messageDiv.textContent = data.message || 'Failed to request withdrawal.';
+          messageDiv.textContent = data.message || 'Withdrawal failed.';
         }
-      } catch (err) {
+      } catch {
         messageDiv.style.color = 'red';
-        messageDiv.textContent = 'Network error. Please try again later.';
+        messageDiv.textContent = 'Network error. Try again.';
       }
     });
+
+    async function loadWithdrawalHistory() {
+      const tbody = document.getElementById('withdrawalHistory');
+      tbody.innerHTML = '<tr><td colspan="3" class="text-center">Loading...</td></tr>';
+      try {
+        const res = await fetch(`${API_BASE}/withdraw/history`, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.withdrawals)) {
+          if (data.withdrawals.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center">No withdrawals yet.</td></tr>';
+          } else {
+            tbody.innerHTML = '';
+            data.withdrawals.forEach(w => {
+              const badge = w.status === 'approved'
+                ? 'approved'
+                : w.status === 'pending'
+                ? 'pending'
+                : 'declined';
+              const row = `
+                <tr>
+                  <td>${new Date(w.createdAt).toLocaleDateString()}</td>
+                  <td>₦${w.amount}</td>
+                  <td><span class="badge ${badge}">${w.status.toUpperCase()}</span></td>
+                </tr>`;
+              tbody.innerHTML += row;
+            });
+          }
+        } else {
+          tbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error loading history.</td></tr>';
+        }
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Network error.</td></tr>';
+      }
+    }
+
+    loadWallet();
+    loadWithdrawalHistory();
   </script>
-<script>
-  const token = localStorage.getItem('neraToken');
-  if (!token) {
-    window.location.href = 'login.html';
-  }
-</script>
 </body>
 </html>

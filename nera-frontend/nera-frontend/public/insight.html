@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Insights | NeraInsight</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .card-box {
+      border-radius: 16px;
+      padding: 20px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+    <a class="navbar-brand" href="index.html">₦eraInsight</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="invest.html">Invest</a></li>
+        <li class="nav-item"><a class="nav-link" href="withdraw.html">Withdraw</a></li>
+        <li class="nav-item"><a class="nav-link" href="referral.html">Referral</a></li>
+        <li class="nav-item"><a class="nav-link" href="#" id="logoutBtn">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="container my-5">
+    <h2 class="text-center mb-4">Your Investment Insights</h2>
+
+    <div class="card-box">
+      <h5>User Info</h5>
+      <p><strong>Phone:</strong> <span id="phone"></span></p>
+      <p><strong>Wallet Balance:</strong> ₦<span id="wallet"></span></p>
+      <p><strong>Referral Code:</strong> <span id="referralCode"></span></p>
+      <p><strong>Bonus Status:</strong> <span id="bonusStatus"></span></p>
+      <p><strong>Active Investment:</strong> <span id="activeInvestment"></span></p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="text-center py-4 bg-dark text-white mt-5">
+    &copy; 2025 NeraInsight. All rights reserved.
+  </footer>
+
+  <script>
+    const API_BASE = 'https://nerainsight.onrender.com/api';
+    const token = localStorage.getItem('neraToken');
+
+    if (!token) {
+      alert('You are not logged in. Redirecting to login.');
+      window.location.href = 'login.html';
+    }
+
+    async function loadUserInsights() {
+      try {
+        const res = await fetch(`${API_BASE}/user/profile`, {
+          headers: {
+            'Authorization': 'Bearer ' + token
+          }
+        });
+
+        if (!res.ok) throw new Error('Failed to load');
+
+        const data = await res.json();
+
+        document.getElementById('phone').textContent = data.phone;
+        document.getElementById('wallet').textContent = data.wallet;
+        document.getElementById('referralCode').textContent = data.referralCode || 'Not available';
+        document.getElementById('bonusStatus').textContent = data.bonusUnlocked ? 'Unlocked' : 'Locked';
+        document.getElementById('activeInvestment').textContent = data.activeInvestment 
+          ? `₦${data.activeInvestment.amount}` 
+          : 'No active investment';
+
+      } catch (err) {
+        alert('Session expired or error occurred. Please log in again');
+        localStorage.removeItem('neraToken');
+        window.location.href = 'login.html';
+      }
+    }
+
+    // Logout logic
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('neraToken');
+      localStorage.removeItem('neraUser');
+      window.location.href = 'login.html';
+    });
+
+    loadUserInsights();
+  </script>
+<script>
+  const token = localStorage.getItem('neraToken');
+  if (!token) {
+    window.location.href = 'login.html';
+  }
+</script>
+</body>
+</html>

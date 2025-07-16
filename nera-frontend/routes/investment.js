@@ -32,21 +32,8 @@ router.post("/invest", authMiddleware, async (req, res) => {
       return res.status(400).json({ message: "Insufficient funds" });
     }
 
-    // Check for existing active investment
-    const active = await Investment.findOne({
-      user: userId,
-      expiresAt: { $gt: new Date() },
-    });
-    if (active) {
-      return res.status(400).json({ message: "You already have an active investment." });
-    }
-
     // Deduct amount from wallet
     user.wallet -= amount;
-
-    // ❌ No referral bonus logic here anymore
-    // ✅ Bonus unlocking is already handled in topup.js
-
     await user.save();
 
     const newInvestment = new Investment({

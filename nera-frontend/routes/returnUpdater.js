@@ -1,39 +1,63 @@
-// /backend/routes/updateReturns.js
-
 const express = require('express');
 const router = express.Router();
 const Investment = require('../models/Investment');
 const User = require('../models/User');
 
+// POST /api/update-returns
 router.post('/update-returns', async (req, res) => {
   try {
-    const now = new Date();
+    const investments = await Investment.find({ isActive: true });
 
-    // Get all active investments (not expired and < 7 days)
-    const investments = await Investment.find({
-      expiresAt: { $gt: now },
-      daysElapsed: { $lt: 7 },
-    });
+    let updated = 0;
 
-    for (let inv of investments) {
-      const user = await User.findById(inv.user);
-      if (!user) continue;
+    for (const invest of investments) {
+      if (!invest.lastUpdated) {
+        invest.lastUpdated = invest.createdAt;
+      }
 
-      // Add daily return to user's wallet
-      user.wallet += inv.dailyReturn;
+      const now = new Date();
+      const timeDiff = now - invest.lastUpdated;
 
-      // Update investment
-      inv.totalReturn += inv.dailyReturn;
-      inv.daysElapsed += 1;
+      // If 24 hours passed
+      if (timeDiff >= 24 * 60 * 60 * 1000) {
+        let dailyReturn = 0;
 
-      await user.save();
-      await inv.save();
+        switch (invest.amount) {
+          case 2000: dailyReturn = 429; break;
+          case 3000: dailyReturn = 715; break;
+          case 5000: dailyReturn = 1286; break;
+          case 7500: dailyReturn = 1857; break;
+          default: continue; // Skip unknown package
+        }
+
+        const user = await User.findById(invest.user);
+        if (!user) continue;
+
+        user.wallet += dailyReturn;
+        await user.save();
+
+        invest.returns += dailyReturn;
+        invest.lastUpdated = now;
+
+        // Deactivate after full returns
+        if (
+          (invest.amount === 2000 && invest.returns >= 3005) ||
+          (invest.amount === 3000 && invest.returns >= 5005) ||
+          (invest.amount === 5000 && invest.returns >= 9000) ||
+          (invest.amount === 7500 && invest.returns >= 13000)
+        ) {
+          invest.isActive = false;
+        }
+
+        await invest.save();
+        updated++;
+      }
     }
 
-    res.json({ message: 'Returns updated successfully', count: investments.length });
+    res.json({ message: `✅ Returns updated for ${updated} investment(s)` });
   } catch (err) {
-    console.error('Update returns error:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Error updating returns:', err);
+    res.status(500).json({ message: 'Server error while updating returns' });
   }
 });
 

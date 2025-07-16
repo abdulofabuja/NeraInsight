@@ -21,6 +21,14 @@ const authenticate = (req, res, next) => {
   });
 };
 
+// Fixed daily return based on amount
+const packages = {
+  2000: 300,
+  3000: 400,
+  5000: 700,
+  7500: 1000,
+};
+
 // POST /api/payment/verify
 router.post('/verify', authenticate, async (req, res) => {
   const { reference, amount } = req.body;
@@ -42,28 +50,46 @@ router.post('/verify', authenticate, async (req, res) => {
     const paymentData = paystackRes.data.data;
 
     if (paymentData.status === 'success' && paymentData.amount === amount * 100) {
-      // credit user wallet or activate investment
       const user = await User.findById(req.user.userId);
       if (!user) return res.status(404).json({ message: 'User not found' });
 
-      // Add investment
+      // Unlock ₦2000 bonus if it's the first investment
+      const hasInvestedBefore = await Investment.exists({ user: user._id });
+      if (!hasInvestedBefore && !user.bonusUnlocked) {
+        user.wallet += 2000;
+        user.bonusUnlocked = true;
+      }
+
+      // Add new investment
       const newInvestment = new Investment({
-        userId: user._id,
+        user: user._id,
         amount,
-        createdAt: new Date(),
+        dailyReturn: packages[amount] || 0,
+        totalReturn: 0,
+        daysElapsed: 0,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       });
 
       await newInvestment.save();
 
-      user.wallet += amount; // or update logic depending on your system
+      // Referral bonus logic (only if first deposit)
+      if (!hasInvestedBefore && user.referredBy) {
+        const referrer = await User.findOne({ referralCode: user.referredBy });
+        if (referrer) {
+          const bonus = Math.floor(amount * 0.1);
+          referrer.wallet += bonus;
+          await referrer.save();
+        }
+      }
+
       await user.save();
 
       return res.status(200).json({
         success: true,
-        message: 'Payment verified and investment activated!',
+        message: '✅ Payment verified and investment activated!',
       });
     } else {
-      return res.status(400).json({ message: 'Invalid payment confirmation' });
+      return res.status(400).json({ message: '❌ Invalid payment confirmation' });
     }
   } catch (err) {
     console.error('Payment verification error:', err.message);

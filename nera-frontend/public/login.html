@@ -12,7 +12,7 @@
     }
     .login-box {
       max-width: 450px;
-      margin: 80px auto;
+      margin: 10vh auto;
       padding: 30px;
       background-color: white;
       border-radius: 12px;
@@ -21,9 +21,23 @@
     .btn-nera {
       background-color: #2a5298;
       color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
     #message {
       margin-top: 15px;
+    }
+    .spinner-border {
+      width: 1rem;
+      height: 1rem;
+    }
+    @media (max-width: 576px) {
+      .login-box {
+        margin: 30px 15px;
+        padding: 20px;
+      }
     }
   </style>
 </head>
@@ -42,10 +56,10 @@
   <!-- Login Form -->
   <div class="login-box">
     <h2 class="text-center mb-4">Login to Your Account</h2>
-    <form id="loginForm">
+    <form id="loginForm" autocomplete="off">
       <div class="mb-3">
         <label for="phone" class="form-label">Phone Number</label>
-        <input type="tel" class="form-control" id="phone" placeholder="Enter your phone number" required>
+        <input type="text" class="form-control" id="phone" placeholder="Enter your phone number" required autocomplete="off">
       </div>
 
       <div class="mb-3">
@@ -56,10 +70,14 @@
           id="password" 
           placeholder="Enter your password"
           required
+          autocomplete="off"
         >
       </div>
 
-      <button type="submit" class="btn btn-nera w-100">Login</button>
+      <button type="submit" class="btn btn-nera w-100" id="loginBtn">
+        <span class="default-text">Login</span>
+        <span class="spinner d-none"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></span>
+      </button>
     </form>
 
     <div id="message" class="text-center"></div>
@@ -81,12 +99,18 @@
 
     const form = document.getElementById('loginForm');
     const messageDiv = document.getElementById('message');
+    const loginBtn = document.getElementById('loginBtn');
+    const spinner = loginBtn.querySelector('.spinner');
+    const defaultText = loginBtn.querySelector('.default-text');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       messageDiv.textContent = '';
       messageDiv.style.color = '';
+      loginBtn.disabled = true;
+      spinner.classList.remove('d-none');
+      defaultText.textContent = 'Logging in...';
 
       const phone = document.getElementById('phone').value.trim();
       const password = document.getElementById('password').value;
@@ -111,14 +135,16 @@
             window.location.href = 'dashboard.html';
           }, 1500);
         } else {
-          console.error('Login error:', data);
           messageDiv.style.color = 'red';
           messageDiv.textContent = data.message || 'Login failed.';
         }
       } catch (error) {
-        console.error('Network error:', error);
         messageDiv.style.color = 'red';
         messageDiv.textContent = 'Network error. Please try again later.';
+      } finally {
+        loginBtn.disabled = false;
+        spinner.classList.add('d-none');
+        defaultText.textContent = 'Login';
       }
     });
   </script>

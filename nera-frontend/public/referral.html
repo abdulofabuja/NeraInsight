@@ -60,7 +60,7 @@
   </footer>
 
   <script>
-    const API_BASE = 'https://nerainsight.onrender.com/api';
+    const API_BASE = 'https://nerainsight.onrender.com/api'; // corrected base URL
     const token = localStorage.getItem('neraToken');
     const userData = JSON.parse(localStorage.getItem('neraUser'));
     const referralLinkInput = document.getElementById('referralLink');
@@ -68,9 +68,9 @@
     const refEarningsEl = document.getElementById('refEarnings');
     const copyMsg = document.getElementById('copyMsg');
 
-    // Check login
+    // Ensure user is logged in
     if (!token || !userData) {
-      alert('You are not logged in. Redirecting to login page.');
+      alert('You are not logged in. Redirecting...');
       window.location.href = 'login.html';
     }
 
@@ -86,8 +86,8 @@
 
         const data = await res.json();
         if (res.ok) {
-          refCountEl.textContent = data.totalReferred;
-          refEarningsEl.textContent = `₦${data.totalEarnings.toLocaleString()}`;
+          refCountEl.textContent = data.totalReferred || 0;
+          refEarningsEl.textContent = `₦${data.totalEarnings?.toLocaleString() || '0'}`;
         } else {
           refCountEl.textContent = '0';
           refEarningsEl.textContent = '₦0';
@@ -109,12 +109,6 @@
     }
 
     loadReferralStats();
-  </script>
-  <script>
-    const token = localStorage.getItem('neraToken');
-    if (!token) {
-      window.location.href = 'login.html';
-    }
   </script>
 </body>
 </html>

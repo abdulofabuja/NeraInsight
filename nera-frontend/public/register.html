@@ -44,8 +44,8 @@
     <h2 class="text-center mb-4">Create Your Account</h2>
     <form id="registerForm">
       <div class="mb-3">
-        <label for="phone" class="form-label">Phone Number (Nigerian)</label>
-        <input type="tel" class="form-control" id="phone" placeholder="08012345678" required pattern="^0[7-9][0-1]\d{8}$">
+        <label for="phone" class="form-label">Phone Number</label>
+        <input type="tel" class="form-control" id="phone" placeholder="+1234567890" required>
       </div>
 
       <div class="mb-3">
@@ -98,7 +98,7 @@
       const referralCode = document.getElementById('referral').value.trim();
 
       try {
-        const response = await fetch('https://nerainsight-1.onrender.com/api/auth/register', {
+        const response = await fetch('https://nerainsight.onrender.com/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phone, password, referralCode })

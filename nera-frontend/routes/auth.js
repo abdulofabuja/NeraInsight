@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// User Registration
+// 👤 Register User
 router.post('/register', async (req, res) => {
   try {
     const { phone, password, referralCode } = req.body;
@@ -44,10 +44,15 @@ router.post('/register', async (req, res) => {
 
     await newUser.save();
 
+    // ✅ Referral Logic
     if (referralCode) {
       const referrer = await User.findOne({ referralCode });
+
       if (referrer) {
-        referrer.wallet += 500;
+        const referredBonus = 2000; // user gets this at registration
+        
+        const tenPercentBonus = 200; // 10% of 2000 deposit
+        referrer.wallet += tenPercentBonus;
         await referrer.save();
       }
     }
@@ -59,7 +64,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Regular User Login
+// 👤 Regular User Login
 router.post('/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -79,7 +84,11 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id, phone: user.phone, isAdmin: user.isAdmin || false },
+      {
+        userId: user._id,
+        phone: user.phone,
+        isAdmin: user.isAdmin || false,
+      },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -92,7 +101,7 @@ router.post('/login', async (req, res) => {
         phone: user.phone,
         wallet: user.wallet,
         referralCode: user.referralCode,
-        isAdmin: user.isAdmin || false
+        isAdmin: user.isAdmin || false,
       },
     });
   } catch (error) {
@@ -101,7 +110,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// ✅ Admin Login (separate endpoint)
+// 👨‍💼 Admin Login
 router.post('/admin/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -117,7 +126,11 @@ router.post('/admin/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: admin._id, phone: admin.phone, isAdmin: true },
+      {
+        userId: admin._id,
+        phone: admin.phone,
+        isAdmin: true,
+      },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -127,7 +140,7 @@ router.post('/admin/login', async (req, res) => {
       token,
       admin: {
         id: admin._id,
-        phone: admin.phone
+        phone: admin.phone,
       },
     });
   } catch (error) {

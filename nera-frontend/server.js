@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -20,11 +19,14 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/user', require('./routes/user'));
 app.use('/api/investment', require('./routes/investment'));
 app.use('/api/topup', require('./routes/topup'));
-app.use('/api/topup-request', require('./routes/topupRequests')); // ✅ Top-up requests
+app.use('/api/topup-request', require('./routes/topupRequests'));
 app.use('/api/withdraw', require('./routes/withdraw'));
 app.use('/api/checkin', require('./routes/checkin'));
+app.use('/api/insights', require('./routes/insight')); // ✅ NEW: Insight route added here
 app.use('/api/returns', require('./routes/returnUpdater'));
+app.use('/api/update-returns', require('./routes/updateReturns'));
 app.use('/api/payment', require('./routes/payment'));
+app.use('/api/admin', require('./routes/admin'));
 
 // ❤️ Health check routes
 app.get('/api/health', (req, res) => {
@@ -42,9 +44,9 @@ app.get('/', (req, res) => {
   res.redirect('/login.html');
 });
 
-// 🧾 Serve all .html files directly
-app.get('/*.html', (req, res) => {
-  const filePath = path.join(publicPath, req.path);
+// 🧾 Serve all .html files directly (✅ FIXED here)
+app.get('/:fileName.html', (req, res) => {
+  const filePath = path.join(publicPath, `${req.params.fileName}.html`);
   res.sendFile(filePath, err => {
     if (err) {
       console.error(`❌ HTML file not found: ${filePath}`);
